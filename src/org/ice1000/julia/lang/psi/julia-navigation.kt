@@ -81,7 +81,8 @@ class JuliaGotoDeclarationHandler : GotoDeclarationHandler {
 						try {
 							ReadAction.compute<Unit, Throwable> {
 								project.languageServer.searchFunctionsByName(juliaSymbol.text)?.let { ret ->
-									if (ret.startsWith("__INTELLIJ__")) return@let null
+									// TODO
+									// if (ret.startsWith("__INTELLIJ__")) return@let null
 									val unescaped = StringEscapeUtils.unescapeJava(ret.trim('"'))
 									try {
 										val json = jsonParser.parse(unescaped)

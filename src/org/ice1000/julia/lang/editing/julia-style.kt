@@ -55,6 +55,9 @@ class JuliaStyleSettingsProvider : LanguageCodeStyleSettingsProvider() {
 			}
 			SettingsType.BLANK_LINES_SETTINGS -> consumer.showStandardOptions("KEEP_BLANK_LINES_IN_CODE")
 //			SettingsType.LANGUAGE_SPECIFIC -> TODO()
+			else -> {
+				// TODO
+			}
 		}
 	}
 

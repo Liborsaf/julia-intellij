@@ -1,6 +1,7 @@
 @file:kotlin.Suppress("unsupported")
-import org.jetbrains.grammarkit.tasks.GenerateLexer
-import org.jetbrains.grammarkit.tasks.GenerateParser
+import org.gradle.api.JavaVersion.VERSION_17
+import org.jetbrains.grammarkit.tasks.GenerateLexerTask
+import org.jetbrains.grammarkit.tasks.GenerateParserTask
 import org.jetbrains.intellij.tasks.PatchPluginXmlTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -27,8 +28,9 @@ version = pluginVersion
 
 plugins {
 	java
-	id("org.jetbrains.intellij") version "0.7.2"
-	id("org.jetbrains.grammarkit") version "2020.3.2"
+	id("org.jetbrains.intellij") version "1.11.0"
+	// id("org.jetbrains.grammarkit") version "2022.3" <- TODO: Not working
+	id("org.jetbrains.grammarkit") version "2021.2.2"
 	kotlin("jvm") version "1.3.60"
 }
 
@@ -56,14 +58,14 @@ allprojects {
 //}
 
 intellij {
-	updateSinceUntilBuild = false
-	instrumentCode = true
+	updateSinceUntilBuild.set(false)
+	instrumentCode.set(true)
+	version.set("2022.3")
 	if (!isCI) {
-		setPlugins("PsiViewer:203-SNAPSHOT", "java")
-		downloadSources = true
+		plugins.set(listOf("PsiViewer:223-SNAPSHOT", "java"))
+		downloadSources.set(true)
 	} else {
-		setPlugins("java")
-		version = "2020.3"
+		plugins.set(listOf("java"))
 	}
 	val user = System.getProperty("user.name")
 	val os = System.getProperty("os.name")
@@ -74,10 +76,10 @@ intellij {
 	}
 	val intellijPath = ["IDEA-C", "IDEA-U"]
 		.mapNotNull { fromToolbox(root, it) }.firstOrNull()
-	intellijPath?.absolutePath?.let { localPath = it }
-	val pycharmPath = ["PyCharm-C", "IDEA-C", "IDEA-U"]
+	intellijPath?.absolutePath?.let { localPath.set(it) }
+	/* val pycharmPath = ["PyCharm-C", "IDEA-C", "IDEA-U"]
 		.mapNotNull { fromToolbox(root, it) }.firstOrNull()
-	pycharmPath?.absolutePath?.let { alternativeIdePath = it }
+	pycharmPath?.absolutePath?.let { alternativeIdePath.set(it) } */
 }
 
 java {
@@ -86,10 +88,10 @@ java {
 }
 
 tasks.withType<PatchPluginXmlTask>().configureEach {
-	changeNotes(file("docs/change-notes.html").readText())
-	pluginDescription(file("docs/description.html").readText())
-	version(pluginVersion)
-	pluginId(packageName)
+	changeNotes.set(file("docs/change-notes.html").readText())
+	pluginDescription.set(file("docs/description.html").readText())
+	version.set(pluginVersion)
+	pluginId.set(packageName)
 }
 
 sourceSets {
@@ -114,13 +116,13 @@ repositories {
 }
 
 dependencies {
-	compile(kotlin("stdlib-jdk8"))
-	compile(group = "org.eclipse.mylyn.github", name = "org.eclipse.egit.github.core", version = "2.1.5") {
+	implementation(kotlin("stdlib-jdk8"))
+	implementation(group = "org.eclipse.mylyn.github", name = "org.eclipse.egit.github.core", version = "2.1.5") {
 		exclude(module = "gson")
 	}
-	compile("org.jetbrains", "markdown", "0.2.0")
-	testCompile(kotlin(module = "test-junit"))
-	testCompile(group = "junit", name = "junit", version = "4.12")
+	implementation("org.jetbrains", "markdown", "0.2.0")
+	testImplementation(kotlin(module = "test-junit"))
+	testImplementation(group = "junit", name = "junit", version = "4.12")
 }
 
 tasks.register("displayCommitHash") {
@@ -142,44 +144,51 @@ fun path(more: Iterable<*>) = more.joinToString(File.separator)
 fun bnf(name: String) = Paths.get("grammar", "$name-grammar.bnf").toString()
 fun flex(name: String) = Paths.get("grammar", "$name-lexer.flex").toString()
 
-val genParser = tasks.register<GenerateParser>("genParser") {
+val genParser = tasks.register<GenerateParserTask>("genParser") {
 	group = "code generation"
 	description = "Generate the Parser and PsiElement classes"
-	source = bnf("julia")
-	targetRoot = "gen/"
-	pathToParser = path(parserRoot + "JuliaParser.java")
-	pathToPsiRoot = path(parserRoot + "psi")
-	purgeOldFiles = true
+
+	source.set(bnf("julia"))
+	targetRoot.set("gen/")
+	pathToParser.set(path(parserRoot + "JuliaParser.java"))
+	pathToPsiRoot.set(path(parserRoot + "psi"))
+	purgeOldFiles.set(true)
 }
 
-val genLexer = tasks.register<GenerateLexer>("genLexer") {
+val genLexer = tasks.register<GenerateLexerTask>("genLexer") {
 	group = "code generation"
 	description = "Generate the Lexer"
-	source = flex("julia")
-	targetDir = path(lexerRoot)
-	targetClass = "JuliaLexer"
-	purgeOldFiles = true
+
+	source.set(flex("julia"))
+	targetDir.set(path(lexerRoot))
+	targetClass.set("JuliaLexer")
+	purgeOldFiles.set(true)
+
 	dependsOn(genParser)
 }
 
-val genDocfmtParser = tasks.register<GenerateParser>("genDocfmtParser") {
+val genDocfmtParser = tasks.register<GenerateParserTask>("genDocfmtParser") {
 	group = "code generation"
 	description = "Generate the Parser for DocumentFormat.jl"
-	source = bnf("docfmt")
-	targetRoot = "gen/"
+
+	source.set(bnf("docfmt"))
+	targetRoot.set("gen/")
+
 	val root = parserRoot + "docfmt"
-	pathToParser = path(root + "DocfmtParser.java")
-	pathToPsiRoot = path(root + "psi")
-	purgeOldFiles = true
+	pathToParser.set(path(root + "DocfmtParser.java"))
+	pathToPsiRoot.set(path(root + "psi"))
+	purgeOldFiles.set(true)
 }
 
-val genDocfmtLexer = tasks.register<GenerateLexer>("genDocfmtLexer") {
+val genDocfmtLexer = tasks.register<GenerateLexerTask>("genDocfmtLexer") {
 	group = "code generation"
 	description = "Generate the Lexer for DocumentFormat.jl"
-	source = flex("docfmt")
-	targetDir = path(lexerRoot + "docfmt")
-	targetClass = "DocfmtLexer"
-	purgeOldFiles = true
+
+	source.set(flex("docfmt"))
+	targetDir.set(path(lexerRoot + "docfmt"))
+	targetClass.set("DocfmtLexer")
+	purgeOldFiles.set(true)
+
 	dependsOn(genDocfmtParser)
 }
 
@@ -210,9 +219,9 @@ tasks.withType<KotlinCompile>().configureEach {
 		sortSpelling
 	)
 	kotlinOptions {
-		jvmTarget = "1.8"
-		languageVersion = "1.3"
-		apiVersion = "1.3"
+		jvmTarget = VERSION_17.toString()
+		languageVersion = "1.7"
+		apiVersion = "1.6"
 		freeCompilerArgs = listOf("-Xjvm-default=enable")
 	}
 }

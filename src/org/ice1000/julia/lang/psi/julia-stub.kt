@@ -29,6 +29,6 @@ class JuliaModuleNavigationContributor : GotoClassContributor {
 		return StubIndex.getElements(key, name, project, scope, JuliaModuleDeclarationMixin::class.java).toTypedArray()
 	}
 
-	override fun getQualifiedName(item: NavigationItem?) = (item as? JuliaModuleDeclaration)?.name
+	override fun getQualifiedName(item: NavigationItem) = (item as? JuliaModuleDeclaration)?.name
 	override fun getQualifiedNameSeparator() = "::"
 }
