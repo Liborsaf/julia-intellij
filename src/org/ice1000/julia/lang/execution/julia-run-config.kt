@@ -118,6 +118,9 @@ class JuliaRunConfiguration(project: Project, factory: ConfigurationFactory) :
 
 class JuliaRunConfigurationFactory(type: JuliaRunConfigurationType) : ConfigurationFactory(type) {
 	override fun createTemplateConfiguration(project: Project) = JuliaRunConfiguration(project, this)
+	override fun getId(): String {
+		return super.getName();
+	}
 }
 
 object JuliaRunConfigurationType : ConfigurationType {
