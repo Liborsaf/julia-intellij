@@ -31,7 +31,7 @@ plugins {
 	id("org.jetbrains.intellij") version "1.11.0"
 	// id("org.jetbrains.grammarkit") version "2022.3" <- TODO: Not working
 	id("org.jetbrains.grammarkit") version "2021.2.2"
-	id("com.gradle.enterprise") version "3.9"
+	// id("com.gradle.enterprise") version "3.9"
 	kotlin("jvm") version "1.3.60"
 }
 
